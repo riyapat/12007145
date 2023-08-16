@@ -1,0 +1,44 @@
+var express=require("express");
+var cors=require("cors");
+var request = require("request");
+
+var app=express();
+app.use(express.urlencoded({extended:true}));
+app.use(express.json());
+app.use(cors());
+const PORT =process.env.PORT||5050;
+
+ app.get("/numbers",async function (req,res){
+  array=req.originalUrl.split("url=");
+   num = new Set();
+   
+  if(array.length<=1)res.send([]);
+  for(i=1;i<array.length;i++){
+  try{
+    const response = await fetch(array[i]);
+  const movies = await response.json();
+  await movies.numbers.forEach(myFunction);
+  function myFunction(item) {
+    num.add(item);
+  }
+  
+  console.log(num);
+  
+  }
+catch{
+  console.log("err");
+}
+let myarr = [];
+for (let element of num) {
+    myarr.push(element);
+}
+console.log(myarr);
+await myarr.sort(function(a, b){return a-b});
+res.send({"numbers":myarr});  
+}
+
+  
+ });
+
+
+app.listen(PORT,() => console.log(`Server is running on port ${PORT}`));
