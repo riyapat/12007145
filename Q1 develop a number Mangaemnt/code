@@ -1,0 +1,209 @@
+// App.js
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Header from './components/Header';
+import AllTrainsPage from './pages/AllTrainsPage';
+import SingleTrainPage from './pages/SingleTrainPage';
+import './App.css';
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Header />
+        <Routes>
+          <Route path="/" element={<AllTrainsPage />} />
+          <Route path="/single-train/:trainNumber" element={<SingleTrainPage />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+
+
+// Header.js
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const Header = () => {
+  return (
+    <header>
+      <nav>
+        <ul>
+          <li>
+            <Link to="/">All Trains</Link>
+          </li>
+        </ul>
+      </nav>
+    </header>
+  );
+};
+
+export default Header;
+
+
+
+import React from 'react';
+
+const TrainCard = ({ train }) => {
+  return (
+    <div className="train-card">
+      <h2>{train.trainName}</h2>
+      <p>Train Number: {train.trainNumber}</p>
+      <p>Departure Time: {train.departureTime.Hours}:{train.departureTime.Minutes}</p>
+      <p>Seats Available (Sleeper): {train.seatsAvailable.sleeper}</p>
+      <p>Seats Available (AC): {train.seatsAvailable.AC}</p>
+      <p>Price (Sleeper): {train.price.sleeper}</p>
+      <p>Price (AC): {train.price.AC}</p>
+      <p>Delayed By: {train.delayedBy} minutes</p>
+    </div>
+  );
+};
+
+export default TrainCard;
+
+
+// AllTrainsPage.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { getTrainDetails, getAuthToken } from '../api';
+
+const AllTrainsPage = () => {
+  const [trains, setTrains] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Register company and get auth token
+        const authData = {
+          companyName: 'Train Central',
+          // ... other registration data
+        };
+        const { access_token } = await getAuthToken(authData);
+
+        // Fetch train details
+        const response = await getTrainDetails('all', access_token);
+        setTrains(response.trains);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <h1>All Trains</h1>
+      <ul>
+        {trains.map((train) => (
+          <li key={train.trainNumber}>
+            <Link to={`/single-train/${train.trainNumber}`}>{train.trainName}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default AllTrainsPage;
+
+
+// SingleTrainPage.js
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { getTrainDetails, getAuthToken } from '../api';
+
+const SingleTrainPage = () => {
+  const { trainNumber } = useParams();
+  const [trainDetails, setTrainDetails] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Register company and get auth token
+        const authData = {
+          companyName: 'Train Central',
+          // ... other registration data
+        };
+        const { access_token } = await getAuthToken(authData);
+
+        // Fetch single train details
+        const response = await getTrainDetails(trainNumber, access_token);
+        setTrainDetails(response);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, [trainNumber]);
+
+  if (!trainDetails) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div>
+      <h1>Train Details</h1>
+      <h2>{trainDetails.trainName}</h2>
+      {/* Display other train details here */}
+    </div>
+  );
+};
+
+export default SingleTrainPage;
+
+
+// api.js
+import axios from 'axios';
+
+const API_BASE_URL = 'http://20.244.56.144/train';
+
+// Register your company and get credentials
+export const registerCompany = async (companyData) => {
+  const response = await axios.post(`${API_BASE_URL}/register`, companyData);
+  return response.data;
+};
+
+// Authenticate and get authorization token
+export const getAuthToken = async (authData) => {
+  const response = await axios.post(`${API_BASE_URL}/auth`, authData);
+  return response.data;
+};
+
+// Get train details by train number
+export const getTrainDetails = async (trainNumber, authToken) => {
+  const headers = { Authorization: `Bearer ${authToken}` };
+  const response = await axios.get(`${API_BASE_URL}/trains/${trainNumber}`, { headers });
+  return response.data;
+};
+
+
+// App.js
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Header from './components/Header';
+import AllTrainsPage from './pages/AllTrainsPage';
+import SingleTrainPage from './pages/SingleTrainPage';
+import './App.css';
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Header />
+        <Routes>
+          <Route path="/" element={<AllTrainsPage />} />
+          <Route path="/single-train/:trainNumber" element={<SingleTrainPage />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+
+
